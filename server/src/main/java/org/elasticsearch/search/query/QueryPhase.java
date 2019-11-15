@@ -94,8 +94,8 @@ import static org.elasticsearch.search.query.TopDocsCollectorContext.shortcutTot
  */
 public class QueryPhase implements SearchPhase {
     private static final Logger LOGGER = LogManager.getLogger(QueryPhase.class);
-    public static final boolean SYS_PROP_LONG_SORT_OPTIMIZED =
-        Booleans.parseBoolean(System.getProperty("es.search.long_sort_optimized", "true"));
+    // TODO: remove this property in 8.0
+    public static final boolean SYS_PROP_REWRITE_SORT = Booleans.parseBoolean(System.getProperty("es.search.rewrite_sort", "true"));
 
     private final AggregationPhase aggregationPhase;
     private final SuggestPhase suggestPhase;
@@ -226,7 +226,7 @@ public class QueryPhase implements SearchPhase {
 
             CheckedConsumer<List<LeafReaderContext>, IOException> leafSorter = l -> {};
             // try to rewrite numeric or date sort to the optimized distanceFeatureQuery
-            if ((searchContext.sort() != null) && SYS_PROP_LONG_SORT_OPTIMIZED) {
+            if ((searchContext.sort() != null) && SYS_PROP_REWRITE_SORT) {
                 Query rewrittenQuery = tryRewriteLongSort(searchContext, searcher.getIndexReader(), query, hasFilterCollector);
                 if (rewrittenQuery != null) {
                     query = rewrittenQuery;
@@ -355,10 +355,13 @@ public class QueryPhase implements SearchPhase {
         return topDocsFactory.shouldRescore();
     }
 
-    // we use collectorManager during sort optimization
-    // for the sort optimization, we have already checked that there are no other collectors, no filters,
-    // no search after, no scroll, no collapse, no track scores
-    // this means we can use TopFieldCollector directly
+
+    /*
+     * We use collectorManager during sort optimization, where
+     * we have already checked that there are no other collectors, no filters,
+     * no search after, no scroll, no collapse, no track scores.
+     * Absence of all other collectors and parameters allows us to use TopFieldCollector directly.
+     */
     private static boolean searchWithCollectorManager(SearchContext searchContext, ContextIndexSearcher searcher, Query query,
             CheckedConsumer<List<LeafReaderContext>, IOException> leafSorter, boolean timeoutSet) throws IOException {
         final IndexReader reader = searchContext.searcher().getIndexReader();
