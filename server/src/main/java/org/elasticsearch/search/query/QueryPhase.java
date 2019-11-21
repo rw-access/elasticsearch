@@ -324,7 +324,7 @@ public class QueryPhase implements SearchPhase {
         collectors.addFirst(topDocsFactory);
 
         final Collector queryCollector;
-        if ( searchContext.getProfilers() != null) {
+        if (searchContext.getProfilers() != null) {
             InternalProfileCollector profileCollector = QueryCollectorContext.createQueryCollectorWithProfiler(collectors);
             searchContext.getProfilers().getCurrentQueryProfiler().setCollector(profileCollector);
             queryCollector = profileCollector;
@@ -587,13 +587,13 @@ public class QueryPhase implements SearchPhase {
         long minValue = LongPoint.decodeDimension(pointValues.getMinPackedValue(), 0);
         long maxValue = LongPoint.decodeDimension(pointValues.getMaxPackedValue(), 0);
         while (minValue < maxValue) {
-            long avgValue = Math.floorDiv(minValue, 2) + Math.floorDiv(maxValue, 2); // to avoid overflow first divide each value by 2
-            long countLeft = estimatePointCount(pointValues, minValue, avgValue);
-            long countRight = estimatePointCount(pointValues, avgValue + 1, maxValue);
+            long midValue = (long) (minValue/2.0 + maxValue/2.0); // to avoid overflow first divide each value by 2
+            long countLeft = estimatePointCount(pointValues, minValue, midValue);
+            long countRight = estimatePointCount(pointValues, midValue + 1, maxValue);
             if (countLeft >= countRight) {
-                maxValue = avgValue;
+                maxValue = midValue;
             } else {
-                minValue = avgValue + 1;
+                minValue = midValue + 1;
             }
         }
         return maxValue;
