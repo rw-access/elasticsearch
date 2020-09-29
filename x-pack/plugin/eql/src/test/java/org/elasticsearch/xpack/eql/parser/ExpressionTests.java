@@ -59,6 +59,8 @@ public class ExpressionTests extends ESTestCase {
     }
 
     public void testStrings() {
+        String TQ = "\"\"\"";
+
         assertEquals("hello\"world", unquoteString(source("\"hello\"world\"")));
         assertEquals("hello'world", unquoteString(source("\"hello'world\"")));
         assertEquals("hello\nworld", unquoteString(source("\"hello\\nworld\"")));
@@ -66,22 +68,24 @@ public class ExpressionTests extends ESTestCase {
         assertEquals("hello\\\"world", unquoteString(source("\"hello\\\\\\\"world\"")));
 
         // test for unescaped strings: """...."""
-        assertEquals("hello\"world", unquoteString(source("\"\"\"hello\"world\"\"\"")));
-        assertEquals("hello\\\"world", unquoteString(source("\"\"\"hello\\\"world\"\"\"")));
-        assertEquals("\"\"hello\"\\\"world\"\"\"", unquoteString(source("\"\"\"\"\"hello\"\\\"world\"\"\"\"\"\"")));
-        assertEquals("hello'world", unquoteString(source("\"\"\"hello'world\"\"\"")));
-        assertEquals("hello'world", unquoteString(source("\"\"\"hello\'world\"\"\"")));
-        assertEquals("hello\\nworld", unquoteString(source("\"\"\"hello\\nworld\"\"\"")));
-        assertEquals("hello\\\\nworld", unquoteString(source("\"\"\"hello\\\\nworld\"\"\"")));
-        assertEquals("hello\\\\\\nworld", unquoteString(source("\"\"\"hello\\\\\\nworld\"\"\"")));
-        assertEquals("hello\\\\\\\"world", unquoteString(source("\"\"\"hello\\\\\\\"world\"\"\"")));
-        assertEquals("\"\\\"", unquoteString(source("\"\"\"\"\\\"\"\"\"")));
-        assertEquals("\"\"\"", unquoteString(source("\"\"\"\\\"\"\"\"\"\"")));
-        assertEquals("\"\"\"", unquoteString(source("\"\"\"\"\\\"\"\"\"\"")));
-        assertEquals("\"\"\"", unquoteString(source("\"\"\"\"\"\\\"\"\"\"")));
-        assertEquals("\"\"", unquoteString(source("\"\"\"\"\"\"\"\"")));
-        assertEquals("\"\" \"\"", unquoteString(source("\"\"\"\"\" \"\"\"\"\"")));
-        assertEquals("", unquoteString(source("\"\"\"\"\"\"")));
+        assertEquals("hello\"world", unquoteString(source(TQ + "hello\"world" + TQ)));
+        assertEquals("hello\\\"world", unquoteString(source(TQ + "hello\\\"world" + TQ)));
+        assertEquals("\"\"hello\"\\\"world\"\"", unquoteString(source(TQ + "\"\"hello\"\\\"world\"\"" + TQ)));
+        assertEquals("hello'world", unquoteString(source(TQ + "hello'world" + TQ)));
+        assertEquals("hello\\'world", unquoteString(source(TQ + "hello\\'world" + TQ)));
+        assertEquals("hello\\nworld", unquoteString(source(TQ + "hello\\nworld" + TQ)));
+        assertEquals("hello\\\\nworld", unquoteString(source(TQ + "hello\\\\nworld" + TQ)));
+        assertEquals("hello\\\\\\nworld", unquoteString(source(TQ + "hello\\\\\\nworld" + TQ)));
+        assertEquals("hello\\\\\\\"world", unquoteString(source(TQ + "hello\\\\\\\"world" + TQ)));
+
+        // test that \" is interpreted literally
+        assertEquals("\"\\\"", unquoteString(source(TQ + "\"\\\"" + TQ)));
+        assertEquals("\\\"\"\"", unquoteString(source(TQ + "\\\"\"\"" + TQ)));
+        assertEquals("\"\\\"\"", unquoteString(source(TQ + "\"\\\"\"" + TQ)));
+        assertEquals("\"\"\\\"", unquoteString(source(TQ + "\"\"\\\"" + TQ)));
+        assertEquals("\"\"", unquoteString(source(TQ + "\"\"" + TQ)));
+        assertEquals("\"\" \"\"", unquoteString(source(TQ + "\"\" \"\"" + TQ)));
+        assertEquals("", unquoteString(source(TQ + "" + TQ)));
     }
 
     public void testLiterals() {
@@ -126,8 +130,8 @@ public class ExpressionTests extends ESTestCase {
 
     public void testTripleDoubleQuotedUnescapedString() {
         // """hello world!"""" == """foobar""" => hello world! = foobar
-        String str = "\"\"\"hello world!\"\"\" == \"\"\"foobar\"\"\"";
-        String expectedStrLeft = "hello world!";
+        String str = "\"\"\"hello world!\"\"\"\" == \"\"\"foobar\"\"\"";
+        String expectedStrLeft = "hello world!\"";
         String expectedStrRight = "foobar";
         Expression parsed = expr(str);
         assertEquals(Equals.class, parsed.getClass());
@@ -137,10 +141,10 @@ public class ExpressionTests extends ESTestCase {
         assertEquals(Literal.class, eq.right().getClass());
         assertEquals(expectedStrRight, ((Literal) eq.right()).value());
 
-        // """""hello\"""world!""""" == """"foo"\""bar"""" => ""hello"""world!"" = "foo"""bar"
-        str = "\"\"\"\"\"hello\\\"\"\"world!\"\"\"\"\" == \"\"\"\"foo\"\\\"\"bar\"\"\"\"";
-        expectedStrLeft = "\"\"hello\"\"\"world!";
-        expectedStrRight = "\"foo\"\"\"bar\"";
+        // """""hello "" world!""""" == """"foo"\""bar"""" => ""hello"""world!"" == "foo"\""bar"
+        str = "\"\"\"\"\"hello \"\" world!\"\"\"\"\" == \"\"\"\"foo\"\\\"\"bar\"\"\"\"";
+        expectedStrLeft = "\"\"hello \"\" world!\"\"";
+        expectedStrRight = "\"foo\"\\\"\"bar\"";
         parsed = expr(str);
         assertEquals(Equals.class, parsed.getClass());
         eq = (Equals) parsed;

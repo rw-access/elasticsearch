@@ -65,7 +65,7 @@ subquery
 eventQuery
     : eventFilter
     ;
-    
+
 eventFilter
     : (ANY | event=identifier) WHERE expression
     ;
@@ -200,7 +200,7 @@ STRING
     | '"'   ('\\' [btnfr"'\\] | ~[\r\n"\\])* '"'
     | '?"'  ('\\"' |~["\r\n])* '"'
     | '?\'' ('\\\'' |~['\r\n])* '\''
-    | '"""' (('\\"""' | '"\\""' | '""\\"' | '\\"\\"\\"') | ~[\r\n])*? '"""'
+    | '"""' (~[\r\n])*? '"""' '"'? '"'?
     ;
 
 INTEGER_VALUE

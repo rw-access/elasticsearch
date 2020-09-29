@@ -128,13 +128,9 @@ abstract class AbstractBuilder extends EqlBaseBaseVisitor<Object> {
                 "Use triple double quotes [\"\"\"] to define unescaped string literals, not [?{}]", text.charAt(1));
         }
 
-        // unescaped strings can be interpreted directly
+        // unescaped strings can be interpreted directly by extracting between the starting and ending """
         if (text.startsWith("\"\"\"")) {
-            String str = text.substring(3, text.length() - 3);
-            return str.replace("\\\"\\\"\\\"", "\"\"\"")
-                .replace("\\\"\"\"", "\"\"\"")
-                .replace("\"\\\"\"", "\"\"\"")
-                .replace("\"\"\\\"", "\"\"\"");
+            return text.substring(3, text.length() - 3);
         }
 
         checkForSingleQuotedString(source, text, 0);
