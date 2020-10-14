@@ -1,5 +1,8 @@
 {
     "properties" : {
+        "some_boolean" : {
+          "type" : "boolean"
+        },
         "bytes_written_string" : {
             "type" : "keyword"
         },

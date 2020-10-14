@@ -7,6 +7,7 @@ package org.elasticsearch.xpack.ql.optimizer;
 
 import org.elasticsearch.xpack.ql.expression.Expression;
 import org.elasticsearch.xpack.ql.expression.Expressions;
+import org.elasticsearch.xpack.ql.expression.FieldAttribute;
 import org.elasticsearch.xpack.ql.expression.Literal;
 import org.elasticsearch.xpack.ql.expression.Order;
 import org.elasticsearch.xpack.ql.expression.function.scalar.SurrogateFunction;
@@ -82,10 +83,10 @@ public final class OptimizerRules {
                 // for expression "==" or "!=" TRUE/FALSE, return the expression itself or its negated variant
                 BinaryComparison bc = (BinaryComparison) e;
 
-                if (TRUE.equals(bc.right())) {
+                if (TRUE.equals(bc.right()) && !(bc.left() instanceof FieldAttribute)) {
                     return e instanceof Equals ? bc.left() : new Not(bc.left().source(), bc.left());
                 }
-                if (FALSE.equals(bc.right())) {
+                if (FALSE.equals(bc.right()) && !(bc.left() instanceof FieldAttribute)) {
                     return e instanceof Equals ? new Not(bc.left().source(), bc.left()) : bc.left();
                 }
             }

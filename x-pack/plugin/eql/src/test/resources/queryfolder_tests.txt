@@ -14,6 +14,14 @@
 // The whitespaces between System Idle Process will be removed and the assertion will fail.
 
 
+
+booleanFieldCheck
+process where some_boolean == true
+;
+"term":{"some_boolean":{"value":true
+;
+
+
 basic
 process where true
 ;
